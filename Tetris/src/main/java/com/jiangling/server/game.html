@@ -1,0 +1,224 @@
+<!--    
+    description:        
+    author:  JiangL    
+    company:            
+    date:    2018/11/25   
+    version: v1.0       
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>俄罗斯方块</title>
+    <style>
+        .game-ui {
+            border: 3px solid black;
+            width: 500px;
+            height: 800px;
+            margin: auto;
+            display: -webkit-flex; /* Safari */
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .grid {
+            border: 0;
+            height: 49px;
+            width: 49px;
+        }
+
+        .start-btn {
+            margin-left: 1000px;
+        }
+
+        .dropping {
+            background: red;
+        }
+
+        .dropped {
+            background: red;
+        }
+    </style>
+</head>
+<body>
+<div class="game-ui"></div>
+<button id="start-game" class="start-btn">开始游戏</button>
+<button id="game-over" class="over-btn">结束游戏</button>
+
+<script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    const UP = 38;
+    const DOWN = 40;
+    const LEFT = 37;
+    const RIGHT = 39;
+    let droppingPattern;
+    let gameInterval;
+    const socket = function () {
+        let s;
+        if (!window.WebSocket) {
+            window.WebSocket = window.MozWebSocket;
+        }
+        if (window.WebSocket) {
+            s = new WebSocket("ws://localhost:8080/websocket");
+            s.onmessage = function (event) {
+                const data = JSON.parse(event.data);
+                // 有patternId说明返回的不是消除信息
+                if (data.patternId) {
+                    droppingPattern.setInfo(data.patternId, data.position, data.op, data.direction, data.opStatus);
+                    $('.grid').removeClass('dropping');
+                    $.each(droppingPattern.getPosition(), function (index, value) {
+                        $("[grid='" + value + "']").addClass('dropping');
+                    });
+                    if (!droppingPattern.getOpStatus() && droppingPattern.getOp() === 'down') {
+                        const droppings = $('.dropping');
+                        droppings.removeClass('dropping');
+                        droppings.addClass('dropped');
+                        eliminate();
+                        droppingPattern = new pattern();
+                    }
+                } else {
+                    const eliminated = data.eliminatedPatterns;
+                    const reserved = data.reservedPatterns;
+                    if (eliminated && eliminated.length > 0) {
+                        for (let i = 0; i < eliminated.length; i++) {
+                            $("[grid='" + eliminated[i] + "']").addClass('eliminating');
+                        }
+                        const eliminating = $('.eliminating');
+                        let twinkle = 0;
+                        let twinkleInterval = setInterval(function () {
+                            if (twinkle === 6) {
+                                clearInterval(twinkleInterval);
+                                $('.dropped').removeClass('dropped');
+                                eliminating.removeClass('eliminating');
+                                for (let i = 0; i < reserved.length; i++) {
+                                    $("[grid='" + (reserved[i] + 10) + "']").addClass('dropped');
+                                }
+                                gameStart();
+                            }
+                            eliminating.css('background', eliminating.css('background') === 'red' ? 'white' : 'red');
+                            twinkle++;
+                        }, 400);
+                    } else {
+                        gameStart();
+                    }
+                }
+
+            };
+            s.onopen = function (event) {
+            };
+            s.onclose = function (event) {
+                console.log(event);
+            };
+            s.onerror = function (event) {
+                console.log(event);
+                alert("连接服务器失败！");
+            }
+        }
+        else {
+            $('body').html("抱歉，您的浏览器不支持WebSocket协议，无法进行游戏！");
+        }
+        return s;
+    }();
+
+
+    const pattern = function () {
+        let patternId = -1;
+        let position, op, direction, opStatus;
+        return {
+            getInfo: function () {
+                return {
+                    patternId: patternId,
+                    position: position,
+                    op: op,
+                    direction: direction,
+                    opStatus: opStatus,
+                    event: 1 // 事件为1表示方块掉落，0表示方块消除
+                }
+            },
+            setInfo: function (_patternId, _position, _op, _direction, _opStatus) {
+                patternId = _patternId;
+                position = _position;
+                op = _op;
+                direction = _direction;
+                opStatus = _opStatus;
+            },
+            getOpStatus: function () {
+                return opStatus;
+            },
+            getPosition: function () {
+                return position;
+            },
+            getOp: function () {
+                return op;
+            },
+            moveDown: function () {
+                op = 'down';
+            },
+            moveLeft: function () {
+                op = 'left';
+            },
+            moveRight: function () {
+                op = 'right';
+            },
+            doRotate: function () {
+                op = 'rotate';
+            }
+        }
+    };
+
+    $(function () {
+        // 初始化界面
+        const ui = $('.game-ui');
+        for (let i = 0; i < 160; i++) {
+            const grid = $('<div></div>');
+            grid.addClass('grid');
+            grid.attr('grid', i);
+            grid.html(i);
+            ui.append(grid);
+        }
+
+        $('#start-game').click(function () {
+            gameStart();
+        });
+    });
+
+    $(document).keydown(function (event) {
+        if (!droppingPattern) return;
+        if (event.keyCode === UP) droppingPattern.doRotate();
+        if (event.keyCode === DOWN) droppingPattern.moveDown();
+        if (event.keyCode === LEFT) droppingPattern.moveLeft();
+        if (event.keyCode === RIGHT) droppingPattern.moveRight();
+        sendPatternToServer(droppingPattern);
+    });
+
+    const sendPatternToServer = function (pattern) {
+        socket.send(JSON.stringify(pattern.getInfo()));
+    };
+
+    const gameStart = function () {
+        gameInterval = setInterval(function () {
+            if (!droppingPattern) {
+                droppingPattern = new pattern();
+            } else {
+                droppingPattern.moveDown();
+            }
+            console.log(droppingPattern.getInfo());
+            sendPatternToServer(droppingPattern);
+        }, 400);
+    };
+
+    const eliminate = function () {
+        if (gameInterval) clearInterval(gameInterval);
+        const dropped = $('.dropped');
+        const grids = [];
+        $.each(dropped, function (index, value) {
+            grids.push($(value).attr('grid'));
+        });
+        socket.send(JSON.stringify({event: 0, grids: grids}));
+    };
+
+</script>
+</body>
+</html>

@@ -7,12 +7,8 @@ import com.jiangling.entity.RealTimeInfo;
 import com.jiangling.util.CommonUtil;
 import org.junit.Test;
 
-import javax.naming.CommunicationException;
-import javax.sound.midi.Soundbank;
-import java.lang.reflect.Array;
 import java.util.*;
 
-import static com.jiangling.constant.OperationConstant.*;
 import static org.junit.Assert.assertTrue;
 
 /**

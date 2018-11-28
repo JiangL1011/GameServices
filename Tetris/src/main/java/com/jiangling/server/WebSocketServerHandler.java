@@ -1,9 +1,8 @@
 package com.jiangling.server;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
-import com.jiangling.entity.Pattern;
+import com.jiangling.entity.RealTimeInfo;
+import com.jiangling.entity.UserPattern;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -17,11 +16,10 @@ import io.netty.handler.codec.http.HttpUtil;
 import io.netty.handler.codec.http.websocketx.*;
 import io.netty.util.CharsetUtil;
 
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import static com.jiangling.util.CommonUtil.eliminate;
-import static com.jiangling.util.CommonUtil.generateRandomPatternId;
+import static com.jiangling.constant.OperationConstant.*;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -34,7 +32,6 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
  */
 public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> {
     private WebSocketServerHandshaker handShaker;
-
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, Object msg) {
@@ -92,27 +89,25 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
 
         // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
-        JSONObject obj = JSON.parseObject(request);
-        // 1表示方块下落，0表示方块消除
-        if (obj.getIntValue("event") == 1) {
-            int patternId = obj.getIntValue("patternId");
-            Integer[] position = obj.get("position") == null ? null : ((JSONArray) obj.get("position")).toJavaObject(Integer[].class);
-            String operation = obj.getString("op");
-            int direction = obj.getIntValue("direction");
-            Pattern pattern;
-            // 类型为-1则随机生成一个图形，否则操作这个图形
-            if (patternId == -1) {
-                pattern = new Pattern(generateRandomPatternId());
-            } else {
-                pattern = new Pattern(patternId, position, operation, direction);
-                pattern.setOpStatus(pattern.operate());
-            }
-            ctx.write(new TextWebSocketFrame(JSON.toJSONString(pattern)));
-        } else {
-            Map<String, List<Integer>> map = eliminate(((JSONArray) obj.get("grids")).toJavaObject(Integer[].class));
-            ctx.write(new TextWebSocketFrame(JSON.toJSONString(map)));
+        RealTimeInfo realTimeInfo = UserPattern.getMap.get(ctx);
+        if (realTimeInfo == null) realTimeInfo = new RealTimeInfo();
+        if (realTimeInfo.getOptLog().isDropped) realTimeInfo.randomNew();
+        switch (request) {
+            case "rotate":
+                realTimeInfo.doRotate();
+                break;
+            case "left":
+                realTimeInfo.moveLeft();
+                break;
+            case "right":
+                realTimeInfo.moveRight();
+                break;
+            default:
+                realTimeInfo.moveDown();
+                break;
         }
-
+        UserPattern.getMap.put(ctx, realTimeInfo);
+        ctx.write(new TextWebSocketFrame(JSON.toJSONString(realTimeInfo.getOptLog())));
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

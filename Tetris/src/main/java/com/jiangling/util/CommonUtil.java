@@ -1,6 +1,8 @@
 package com.jiangling.util;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.Set;
 
 /**
  * description:
@@ -23,47 +25,50 @@ public class CommonUtil {
         return getRandomInt(0, 6);
     }
 
-    public static Map<String, List<Integer>> eliminate(Integer[] dropped) {
-        Arrays.sort(dropped);
-        System.out.println("dropped:" + Arrays.toString(dropped));
-        // 要被消除的
-        List<Integer> eliminated = new ArrayList<>();
-        // 保留不消除的
-        List<Integer> reserved = new ArrayList<>();
-        List<Integer> temp = new ArrayList<>();
-        boolean b = true;
-        for (Integer d : dropped) {
-            if (b) {
-                if (d % 10 == 0 && hasValue(dropped, d + 9)) {
-                    temp.add(d);
-                    b = false;
-                    continue;
-                } else {
-                    reserved.add(d);
-                }
-            } else {
-                temp.add(d);
-                if (d - temp.get(0) >= 9) {
-                    if (temp.size() == 10) {
-                        eliminated.addAll(temp);
-                    } else {
-                        reserved.addAll(temp);
-                    }
-                    temp.clear();
-                    b = true;
-                }
-            }
+    public static void arrayFullAdd(int[] arr, int num) {
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] += num;
         }
-        Map<String, List<Integer>> map = new HashMap<>();
-        map.put("eliminatedPatterns", eliminated);
-        map.put("reservedPatterns", reserved);
-        System.out.println(map);
-        return map;
     }
 
-    private static boolean hasValue(Integer[] arr, Integer value) {
-        for (Integer integer : arr) {
-            if (integer.equals(value)) return true;
+    public static boolean touchLeftSideBoundary(int[] grids) {
+        for (int grid : grids) {
+            if (grid % 10 == 0) return true;
+        }
+        return false;
+    }
+
+    public static boolean touchRightSideBoundary(int[] grids) {
+        for (int grid : grids) {
+            if ((grid + 1) % 10 == 0) return true;
+        }
+        return false;
+    }
+
+    public static boolean touchBottomBoundary(int[] grids) {
+        for (int grid : grids) {
+            if (grid / 10 == 15) return true;
+        }
+        return false;
+    }
+
+    public static boolean touchDroppedGridOnLeftSides(int[] droppingGrids, Set<Integer> droppedGrids) {
+        for (int grid : droppingGrids) {
+            if (droppedGrids.contains(grid - 1)) return true;
+        }
+        return false;
+    }
+
+    public static boolean touchDroppedGridOnRightSides(int[] droppingGrids, Set<Integer> droppedGrids) {
+        for (int grid : droppingGrids) {
+            if (droppedGrids.contains(grid + 1)) return true;
+        }
+        return false;
+    }
+
+    public static boolean touchDroppedGridOnBottom(int[] droppingGrids, Set<Integer> droppedGrids) {
+        for (int grid : droppingGrids) {
+            if (droppedGrids.contains(grid + 10)) return true;
         }
         return false;
     }

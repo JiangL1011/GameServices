@@ -65,7 +65,7 @@
             s = new WebSocket("ws://localhost:8080/websocket");
             s.onmessage = function (event) {
                 const data = JSON.parse(event.data);
-                if (!data) return;
+                if (!data || data.length === 0) return;
                 const preOptDropping = data.preOptDropping;
                 const afterOptDropping = data.afterOptDropping;
                 const optSuccess = data.optSuccess;
@@ -91,7 +91,7 @@
             s.onopen = function (event) {
             };
             s.onclose = function (event) {
-                console.log(event);
+                alert("连接已断开！");
             };
             s.onerror = function (event) {
                 console.log(event);

@@ -91,7 +91,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
             request = "";
             realTimeInfo = new RealTimeInfo();
         }
-        if (realTimeInfo.getOptLog().isDropped || realTimeInfo.getOptLog().optSuccess) {
+        if (realTimeInfo.getOptLog().isDropped || realTimeInfo.getOptLog().optSuccess || !request.equals("")) {
             switch (request) {
                 case "rotate":
                     realTimeInfo.doRotate();
@@ -109,7 +109,7 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
             UserPattern.getMap.put(ctx, realTimeInfo);
             ctx.write(new TextWebSocketFrame(JSON.toJSONString(realTimeInfo.getOptLog())));
         } else {
-            ctx.write(null);
+            ctx.write(new TextWebSocketFrame("[]"));
         }
     }
 

@@ -52,34 +52,11 @@ public class RealTimeInfo {
     }
 
     public void moveLeft() {
-        boolean opt = true;
-        // 上次操作完成后的坐标即为当次操作完成前的坐标
-        int[][] preLocations = optLog.getAfterOptDropping();
-        if (preLocations != null){
-            // 临时坐标，用于保存操作后的坐标
-            int[][] temp = new int[preLocations.length][2];
-            for (int i = 0; i < preLocations.length; i++) {
-                int x = preLocations[i][1];
-                int y = preLocations[i][0];
-                if (x - 1 >= 0 && !existDropped(x - 1, y)) {
-                    temp[i][0] = y;
-                    temp[i][1] = x - 1;
-                } else {
-                    opt = false;
-                    break;
-                }
-            }
-            optLog.optSuccess = opt;
-            if (opt) {
-                optLog.setPreOptDropping(preLocations);
-                optLog.setAfterOptDropping(temp);
-            }
-            optLog.isDropped = false;
-        }
+        moveLeftOrRight(-1);
     }
 
     public void moveRight() {
-
+        moveLeftOrRight(1);
     }
 
     public void moveDown() {
@@ -91,7 +68,7 @@ public class RealTimeInfo {
         for (int i = 0; i < preLocations.length; i++) {
             int x = preLocations[i][1];
             int y = preLocations[i][0];
-            if (y < HEIGHT-1 && !existDropped(x, y + 1)) {
+            if (y < HEIGHT - 1 && !existDropped(x, y + 1)) {
                 temp[i][0] = y + 1;
                 temp[i][1] = x;
             } else {
@@ -103,6 +80,7 @@ public class RealTimeInfo {
         optLog.setPreOptDropping(preLocations);
         if (opt) {
             optLog.setAfterOptDropping(temp);
+            optLog.isDropped = false;
         } else {
             Map<String, HashSet<Integer>> droppedLocations = optLog.getDroppedLocations();
             Set<Integer[]> updateDroppedLocations = new HashSet<>();
@@ -110,30 +88,30 @@ public class RealTimeInfo {
             for (int[] t : preLocations) {
                 int y = t[0];
                 int x = t[1];
-                HashSet<Integer> xLocations = droppedLocations.get(y+"");
+                HashSet<Integer> xLocations = droppedLocations.get(y + "");
                 if (xLocations == null) xLocations = new HashSet<>();
                 xLocations.add(x);
-                droppedLocations.put(y+"", xLocations);
+                droppedLocations.put(y + "", xLocations);
                 updateDroppedLocations.add(new Integer[]{y, x});
             }
             optLog.setDroppedLocations(droppedLocations);
             optLog.setUpdateDroppedLocations(updateDroppedLocations);
-//            optLog.setAfterOptDropping(null);
             randomNew();
             optLog.isDropped = true;
         }
     }
 
     public void doRotate() {
+
     }
 
     private boolean existDropped(int x, int y) {
-        HashSet<Integer> xLocations = optLog.getDroppedLocations().get(y+"");
+        HashSet<Integer> xLocations = optLog.getDroppedLocations().get(y + "");
         if (xLocations == null) return false;
         return xLocations.contains(x);
     }
 
-    public void randomNew() {
+    private void randomNew() {
         if (optLog == null) optLog = new OperationLog();
 
         patternId = CommonUtil.getRandomInt(0, 6);
@@ -160,5 +138,32 @@ public class RealTimeInfo {
 
     // 消除
     private void eliminate() {
+    }
+
+    private void moveLeftOrRight(int leftOrRight) {
+        boolean opt = true;
+        // 上次操作完成后的坐标即为当次操作完成前的坐标
+        int[][] preLocations = optLog.getAfterOptDropping();
+        if (preLocations != null) {
+            // 临时坐标，用于保存操作后的坐标
+            int[][] temp = new int[preLocations.length][2];
+            for (int i = 0; i < preLocations.length; i++) {
+                int x = preLocations[i][1];
+                int y = preLocations[i][0];
+                if ((leftOrRight < 0 ? (x - 1 >= 0) : (x + 1 <= WIDTH - 1)) && !existDropped(x + leftOrRight, y)) {
+                    temp[i][0] = y;
+                    temp[i][1] = x + leftOrRight;
+                } else {
+                    opt = false;
+                    break;
+                }
+            }
+            optLog.optSuccess = opt;
+            if (opt) {
+                optLog.setPreOptDropping(preLocations);
+                optLog.setAfterOptDropping(temp);
+            }
+            optLog.isDropped = false;
+        }
     }
 }

@@ -3,7 +3,10 @@ package com.jiangling.entity;
 import com.jiangling.constant.PatternConstant;
 import com.jiangling.util.CommonUtil;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * description:
@@ -101,7 +104,6 @@ public class RealTimeInfo {
         if (opt) {
             optLog.setAfterOptDropping(temp);
         } else {
-            optLog.isDropped = true;
             Map<String, HashSet<Integer>> droppedLocations = optLog.getDroppedLocations();
             Set<Integer[]> updateDroppedLocations = new HashSet<>();
             if (droppedLocations == null) droppedLocations = new HashMap<>();
@@ -114,9 +116,11 @@ public class RealTimeInfo {
                 droppedLocations.put(y+"", xLocations);
                 updateDroppedLocations.add(new Integer[]{y, x});
             }
-            optLog.setUpdateDroppedLocations(updateDroppedLocations);
             optLog.setDroppedLocations(droppedLocations);
-            optLog.setAfterOptDropping(null);
+            optLog.setUpdateDroppedLocations(updateDroppedLocations);
+//            optLog.setAfterOptDropping(null);
+            randomNew();
+            optLog.isDropped = true;
         }
     }
 
@@ -131,9 +135,11 @@ public class RealTimeInfo {
 
     public void randomNew() {
         if (optLog == null) optLog = new OperationLog();
+
         patternId = CommonUtil.getRandomInt(0, 6);
         int[][][] randomPatternWithAllDirections = PatternConstant.ALL.get(patternId);
         int directionCount = randomPatternWithAllDirections.length;
+
         direction = CommonUtil.getRandomInt(0, directionCount - 1);
         int[][] randomDirectionPattern = randomPatternWithAllDirections[direction];
         // 最后一组坐标是基准点坐标，因此无需遍历到最后一个
@@ -142,9 +148,13 @@ public class RealTimeInfo {
             int[] location = randomDirectionPattern[i];
             System.arraycopy(location, 0, temp[i], 0, 2);
         }
+
         optLog.setPreOptDropping(null);
+
         optLog.setAfterOptDropping(temp);
+
         optLog.optSuccess = true;
+
         optLog.isDropped = false;
     }
 

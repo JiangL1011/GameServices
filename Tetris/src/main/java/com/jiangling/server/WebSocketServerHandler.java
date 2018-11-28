@@ -86,24 +86,31 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
         RealTimeInfo realTimeInfo = UserPattern.getMap.get(ctx);
-        if (realTimeInfo == null) realTimeInfo = new RealTimeInfo();
-        if (realTimeInfo.getOptLog().isDropped) realTimeInfo.randomNew();
-        switch (request) {
-            case "rotate":
-                realTimeInfo.doRotate();
-                break;
-            case "left":
-                realTimeInfo.moveLeft();
-                break;
-            case "right":
-                realTimeInfo.moveRight();
-                break;
-            default:
-                realTimeInfo.moveDown();
-                break;
+        // 当出现下面两个if条件的任意一个时，表示有新方块生成，则清空request指令，否则方块可能会跳过第一行
+        if (realTimeInfo == null) {
+            request = "";
+            realTimeInfo = new RealTimeInfo();
         }
-        UserPattern.getMap.put(ctx, realTimeInfo);
-        ctx.write(new TextWebSocketFrame(JSON.toJSONString(realTimeInfo.getOptLog())));
+        if (realTimeInfo.getOptLog().isDropped || realTimeInfo.getOptLog().optSuccess) {
+            switch (request) {
+                case "rotate":
+                    realTimeInfo.doRotate();
+                    break;
+                case "left":
+                    realTimeInfo.moveLeft();
+                    break;
+                case "right":
+                    realTimeInfo.moveRight();
+                    break;
+                case "down":
+                    realTimeInfo.moveDown();
+                    break;
+            }
+            UserPattern.getMap.put(ctx, realTimeInfo);
+            ctx.write(new TextWebSocketFrame(JSON.toJSONString(realTimeInfo.getOptLog())));
+        } else {
+            ctx.write(null);
+        }
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

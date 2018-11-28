@@ -53,9 +53,8 @@
     const DOWN = 40;
     const LEFT = 37;
     const RIGHT = 39;
-    let RealTimeInfo;
     let gameInterval;
-    let command = '';
+    let command = 'down';
     let speed = 700;
     const socket = function () {
         let s;
@@ -66,20 +65,23 @@
             s = new WebSocket("ws://localhost:8080/websocket");
             s.onmessage = function (event) {
                 const data = JSON.parse(event.data);
+                if (!data) return;
                 const preOptDropping = data.preOptDropping;
                 const afterOptDropping = data.afterOptDropping;
                 const optSuccess = data.optSuccess;
                 const isDropped = data.isDropped;
                 const droppedLocations = data.droppedLocations;
                 const updateDroppedLocations = data.updateDroppedLocations;
+
                 const droppings = $('.dropping');
                 droppings.removeClass('dropping');
-                if (optSuccess) {
+                if (afterOptDropping) {
                     for (let i = 0; i < 4; i++) {
-                        $("[grid='" + (afterOptDropping[i][0] + ',' + afterOptDropping[i][1]) +
-                            "']").addClass('dropping');
+                        const grid = $("[grid='" + (afterOptDropping[i][0] + ',' + afterOptDropping[i][1]) + "']");
+                        grid.addClass('dropping');
                     }
-                } else {
+                }
+                if (updateDroppedLocations) {
                     for (let i = 0; i < 4; i++) {
                         $("[grid='" + (updateDroppedLocations[i][0] + ',' + updateDroppedLocations[i][1]) +
                             "']").addClass('dropped');
@@ -120,7 +122,7 @@
     });
 
     $(document).keydown(function (event) {
-        if (!RealTimeInfo) return;
+        if ($('.dropping').length === 0) return;
         if (event.keyCode === UP) socket.send('rotate');
         if (event.keyCode === DOWN) socket.send('down');
         if (event.keyCode === LEFT) socket.send('left');
@@ -128,7 +130,6 @@
     });
 
     const gameStart = function () {
-        socket.send('start');
         gameInterval = setInterval(function () {
             socket.send(command);
         }, speed);

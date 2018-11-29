@@ -65,10 +65,7 @@
             s.onmessage = function (event) {
                 const data = JSON.parse(event.data);
                 if (!data || data.length === 0) return;
-                const preOptDropping = data.preOptDropping;
                 const afterOptDropping = data.afterOptDropping;
-                const optSuccess = data.optSuccess;
-                const isDropped = data.isDropped;
                 const droppedLocations = data.droppedLocations;
                 const updateDroppedLocations = data.updateDroppedLocations;
                 const hasEliminatedLines = data.hasEliminatedLines;

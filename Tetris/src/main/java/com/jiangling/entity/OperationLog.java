@@ -1,6 +1,9 @@
 package com.jiangling.entity;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * description:
@@ -28,23 +31,23 @@ public class OperationLog {
         return preOptDropping;
     }
 
-    public void setPreOptDropping(int[][] preOptDropping) {
+    void setPreOptDropping(int[][] preOptDropping) {
         this.preOptDropping = preOptDropping;
     }
 
-    public int[][] getAfterOptDropping() {
+    int[][] getAfterOptDropping() {
         return afterOptDropping;
     }
 
-    public void setAfterOptDropping(int[][] afterOptDropping) {
+    void setAfterOptDropping(int[][] afterOptDropping) {
         this.afterOptDropping = afterOptDropping;
     }
 
-    public Map<String, HashSet<Integer>> getDroppedLocations() {
+    Map<String, HashSet<Integer>> getDroppedLocations() {
         return droppedLocations;
     }
 
-    public void setDroppedLocations(Map<String, HashSet<Integer>> droppedLocations) {
+    void setDroppedLocations(Map<String, HashSet<Integer>> droppedLocations) {
         this.droppedLocations = droppedLocations;
     }
 
@@ -52,7 +55,7 @@ public class OperationLog {
         return updateDroppedLocations;
     }
 
-    public void setUpdateDroppedLocations(Set<Integer[]> updateDroppedLocations) {
+    void setUpdateDroppedLocations(Set<Integer[]> updateDroppedLocations) {
         this.updateDroppedLocations = updateDroppedLocations;
     }
 }

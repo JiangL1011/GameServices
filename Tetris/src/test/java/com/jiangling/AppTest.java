@@ -60,15 +60,6 @@ public class AppTest {
     }
 
     @Test
-    public void test6() {
-        RealTimeInfo info = new RealTimeInfo();
-        for (int i = 0; i < 10; i++) {
-            System.out.println(info);
-            info.moveLeft();
-        }
-    }
-
-    @Test
     public void test7() {
         Set<Integer> droppedGrids = new HashSet<>();
         droppedGrids.add(1);
@@ -166,31 +157,20 @@ public class AppTest {
     }
 
     @Test
-    public void test15() {
-        RealTimeInfo realTimeInfo = new RealTimeInfo();
-        System.out.println(JSON.toJSONString(realTimeInfo));
-        for (int i = 0; i < 5; i++) {
-            realTimeInfo.moveLeft();
-            System.out.println(JSON.toJSONString(realTimeInfo));
-            System.out.println("----------------------------------------");
-        }
-    }
-
-    @Test
-    public void test16(){
+    public void test16() {
         Map<Integer, HashSet<Integer>> map = null;
         System.out.println(map);
         map = new HashMap<>();
-        map.put(1,null);
+        map.put(1, null);
         System.out.println(map);
         HashSet<Integer> set = map.get(1);
-        if (set == null) set = new HashSet<>(Arrays.asList(1,2));
+        if (set == null) set = new HashSet<>(Arrays.asList(1, 2));
         set.add(3);
         System.out.println(map);
     }
 
     @Test
-    public void test17(){
+    public void test17() {
         OperationLog operationLog = new OperationLog();
         System.out.println(JSON.toJSONString(operationLog));
         operationLog.isDropped = true;
@@ -198,12 +178,30 @@ public class AppTest {
     }
 
     @Test
-    public void test18(){
+    public void test18() {
         Set<int[]> set = new HashSet<>();
-        set.add(new int[]{1,2});
-        set.add(new int[]{2,1});
+        set.add(new int[]{1, 2});
+        set.add(new int[]{2, 1});
         System.out.println(set);
-        System.out.println(set.add(new int[]{1,2}));
+        System.out.println(set.add(new int[]{1, 2}));
+    }
+
+    @Test
+    public void test19() {
+        Map<Integer, int[]> map = new HashMap<>();
+        map.put(1, new int[]{1, 2, 3});
+        System.out.println(JSON.toJSONString(map));
+        int[] ints = map.get(1);
+        ints[0] = 4;
+        System.out.println(JSON.toJSONString(map));
+
+    }
+
+    @Test
+    public void test20() {
+        int[] a = {1, 2, 3};
+        a[0] -= 1;
+        System.out.println(Arrays.toString(a));
     }
 
 }

@@ -20,6 +20,8 @@ public class RealTimeInfo {
     private static final int WIDTH = 10;
     private int patternId;
     private int direction;
+    // 基准点坐标
+    private int[] mark = new int[2];
     // 记录操作记录
     private OperationLog optLog;
 
@@ -31,35 +33,33 @@ public class RealTimeInfo {
         return optLog;
     }
 
-    public void setOptLog(OperationLog optLog) {
-        this.optLog = optLog;
+    public void moveOrRotate(String command) {
+        switch (command) {
+            case "rotate":
+                doRotate();
+                break;
+            case "left":
+                moveLeft();
+                break;
+            case "right":
+                moveRight();
+                break;
+            case "down":
+                moveDown();
+                break;
+        }
+        if (optLog.isDropped) eliminate();
     }
 
-    public int getPatternId() {
-        return patternId;
-    }
-
-    public void setPatternId(int patternId) {
-        this.patternId = patternId;
-    }
-
-    public int getDirection() {
-        return direction;
-    }
-
-    public void setDirection(int direction) {
-        this.direction = direction;
-    }
-
-    public void moveLeft() {
+    private void moveLeft() {
         moveLeftOrRight(-1);
     }
 
-    public void moveRight() {
+    private void moveRight() {
         moveLeftOrRight(1);
     }
 
-    public void moveDown() {
+    private void moveDown() {
         boolean opt = true;
         // 上次操作完成后的坐标即为当次操作完成前的坐标
         int[][] preLocations = optLog.getAfterOptDropping();
@@ -81,6 +81,7 @@ public class RealTimeInfo {
         if (opt) {
             optLog.setAfterOptDropping(temp);
             optLog.isDropped = false;
+            mark[0] += 1;
         } else {
             Map<String, HashSet<Integer>> droppedLocations = optLog.getDroppedLocations();
             Set<Integer[]> updateDroppedLocations = new HashSet<>();
@@ -101,7 +102,35 @@ public class RealTimeInfo {
         }
     }
 
-    public void doRotate() {
+    private void doRotate() {
+        boolean opt = true;
+        // 上次操作完成后的坐标即为当次操作完成前的坐标
+        int[][] preLocations = optLog.getAfterOptDropping();
+        int[][][] allDirectionPatterns = PatternConstant.ALL.get(patternId);
+        int nextDirection = direction + 1 == allDirectionPatterns.length ? 0 : direction + 1;
+        int[][] nextDirectionPattern = allDirectionPatterns[nextDirection];
+        int yOffset = mark[0] - nextDirectionPattern[nextDirectionPattern.length - 1][0];
+        int xOffset = mark[1] - nextDirectionPattern[nextDirectionPattern.length - 1][1];
+        int[][] temp = new int[4][2];
+        // 最后一个是基准坐标，因此不用遍历到最后一个
+        for (int i = 0; i < nextDirectionPattern.length - 1; i++) {
+            int y = nextDirectionPattern[i][0] + yOffset;
+            int x = nextDirectionPattern[i][1] + xOffset;
+            if (y >= HEIGHT || x >= WIDTH || x < 0 || existDropped(x, y)) {
+                opt = false;
+                break;
+            } else {
+                temp[i][0] = y;
+                temp[i][1] = x;
+            }
+        }
+        optLog.optSuccess = opt;
+        if (opt) {
+            optLog.setPreOptDropping(preLocations);
+            optLog.setAfterOptDropping(temp);
+            direction = nextDirection;
+        }
+        optLog.isDropped = false;
 
     }
 
@@ -127,6 +156,9 @@ public class RealTimeInfo {
             System.arraycopy(location, 0, temp[i], 0, 2);
         }
 
+        mark[0] = randomDirectionPattern[randomDirectionPattern.length - 1][0];
+        mark[1] = randomDirectionPattern[randomDirectionPattern.length - 1][1];
+
         optLog.setPreOptDropping(null);
 
         optLog.setAfterOptDropping(temp);
@@ -136,8 +168,8 @@ public class RealTimeInfo {
         optLog.isDropped = false;
     }
 
-    // 消除
     private void eliminate() {
+
     }
 
     private void moveLeftOrRight(int leftOrRight) {
@@ -162,6 +194,7 @@ public class RealTimeInfo {
             if (opt) {
                 optLog.setPreOptDropping(preLocations);
                 optLog.setAfterOptDropping(temp);
+                mark[1] += leftOrRight;
             }
             optLog.isDropped = false;
         }

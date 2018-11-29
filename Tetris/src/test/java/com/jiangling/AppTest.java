@@ -173,7 +173,7 @@ public class AppTest {
     public void test17() {
         OperationLog operationLog = new OperationLog();
         System.out.println(JSON.toJSONString(operationLog));
-        operationLog.isDropped = true;
+        operationLog.setDropped(true);
         System.out.println(JSON.toJSONString(operationLog));
     }
 

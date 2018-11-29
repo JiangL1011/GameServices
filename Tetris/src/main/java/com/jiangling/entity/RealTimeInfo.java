@@ -20,7 +20,7 @@ public class RealTimeInfo {
     private static final int WIDTH = 10;
     private int patternId;
     private int direction;
-    // 基准点坐标
+    // 基准点坐标，用于旋转的定位
     private int[] mark = new int[2];
     // 记录操作记录
     private OperationLog optLog;
@@ -34,6 +34,7 @@ public class RealTimeInfo {
     }
 
     public void moveOrRotate(String command) {
+        optLog.setHasEliminatedLines(false);
         switch (command) {
             case "rotate":
                 doRotate();
@@ -48,7 +49,6 @@ public class RealTimeInfo {
                 moveDown();
                 break;
         }
-        if (optLog.isDropped) eliminate();
     }
 
     private void moveLeft() {
@@ -76,11 +76,11 @@ public class RealTimeInfo {
                 break;
             }
         }
-        optLog.optSuccess = opt;
+        optLog.setOptSuccess(opt);
         optLog.setPreOptDropping(preLocations);
         if (opt) {
             optLog.setAfterOptDropping(temp);
-            optLog.isDropped = false;
+            optLog.setDropped(false);
             mark[0] += 1;
         } else {
             Map<String, HashSet<Integer>> droppedLocations = optLog.getDroppedLocations();
@@ -98,7 +98,8 @@ public class RealTimeInfo {
             optLog.setDroppedLocations(droppedLocations);
             optLog.setUpdateDroppedLocations(updateDroppedLocations);
             randomNew();
-            optLog.isDropped = true;
+            optLog.setDropped(true);
+            optLog.setHasEliminatedLines(eliminate());
         }
     }
 
@@ -124,13 +125,13 @@ public class RealTimeInfo {
                 temp[i][1] = x;
             }
         }
-        optLog.optSuccess = opt;
+        optLog.setOptSuccess(opt);
         if (opt) {
             optLog.setPreOptDropping(preLocations);
             optLog.setAfterOptDropping(temp);
             direction = nextDirection;
         }
-        optLog.isDropped = false;
+        optLog.setDropped(false);
 
     }
 
@@ -163,13 +164,29 @@ public class RealTimeInfo {
 
         optLog.setAfterOptDropping(temp);
 
-        optLog.optSuccess = true;
+        optLog.setOptSuccess(true);
 
-        optLog.isDropped = false;
+        optLog.setDropped(false);
     }
 
-    private void eliminate() {
-
+    private boolean eliminate() {
+        Map<String, HashSet<Integer>> droppedLocations = optLog.getDroppedLocations();
+        if (droppedLocations == null || droppedLocations.size() == 0) return false;
+        int eliminateLines = 0;
+        int checkLines = droppedLocations.size();
+        for (int i = HEIGHT - 1; i >= HEIGHT - checkLines; i--) {
+            HashSet<Integer> xValues = droppedLocations.get(i + "");
+            if (xValues.size() != WIDTH) {
+                if (eliminateLines != 0) {
+                    droppedLocations.put(i + eliminateLines + "", xValues);
+                    droppedLocations.remove(i + "");
+                }
+            } else {
+                eliminateLines++;
+            }
+        }
+        if (eliminateLines != 0) optLog.getUpdateDroppedLocations().clear();
+        return eliminateLines != 0;
     }
 
     private void moveLeftOrRight(int leftOrRight) {
@@ -190,13 +207,13 @@ public class RealTimeInfo {
                     break;
                 }
             }
-            optLog.optSuccess = opt;
+            optLog.setOptSuccess(opt);
             if (opt) {
                 optLog.setPreOptDropping(preLocations);
                 optLog.setAfterOptDropping(temp);
                 mark[1] += leftOrRight;
             }
-            optLog.isDropped = false;
+            optLog.setDropped(false);
         }
     }
 }

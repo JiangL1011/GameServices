@@ -54,7 +54,6 @@
     const LEFT = 37;
     const RIGHT = 39;
     let gameInterval;
-    let command = 'down';
     let speed = 700;
     const socket = function () {
         let s;
@@ -72,6 +71,7 @@
                 const isDropped = data.isDropped;
                 const droppedLocations = data.droppedLocations;
                 const updateDroppedLocations = data.updateDroppedLocations;
+                const hasEliminatedLines = data.hasEliminatedLines;
 
                 const droppings = $('.dropping');
                 droppings.removeClass('dropping');
@@ -81,12 +81,23 @@
                         grid.addClass('dropping');
                     }
                 }
-                if (updateDroppedLocations) {
-                    for (let i = 0; i < 4; i++) {
-                        $("[grid='" + (updateDroppedLocations[i][0] + ',' + updateDroppedLocations[i][1]) +
-                            "']").addClass('dropped');
+                if (hasEliminatedLines) {
+                    const droppings = $('.dropped');
+                    droppings.removeClass('dropped');
+                    $.each(droppedLocations, function (key, value) {
+                        for (let i = 0; i < value.length; i++) {
+                            $("[grid='" + (key + ',' + value[i]) + "']").addClass('dropped');
+                        }
+                    })
+                } else {
+                    if (updateDroppedLocations) {
+                        for (let i = 0; i < 4; i++) {
+                            $("[grid='" + (updateDroppedLocations[i][0] + ',' + updateDroppedLocations[i][1]) +
+                                "']").addClass('dropped');
+                        }
                     }
                 }
+
             };
             s.onopen = function (event) {
             };
@@ -112,12 +123,16 @@
             const grid = $('<div></div>');
             grid.addClass('grid');
             grid.attr('grid', parseInt(i / 10) + "," + (i % 10));
-            grid.html(parseInt(i / 10) + "," + (i % 10));
+            // grid.html(parseInt(i / 10) + "," + (i % 10));
             ui.append(grid);
         }
 
         $('#start-game').click(function () {
             gameStart();
+        });
+
+        $('#game-over').click(function () {
+            clearInterval(gameInterval);
         });
     });
 
@@ -131,7 +146,7 @@
 
     const gameStart = function () {
         gameInterval = setInterval(function () {
-            socket.send(command);
+            socket.send('down');
         }, speed);
     };
 

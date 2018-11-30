@@ -64,11 +64,12 @@
             s = new WebSocket("ws://localhost:8080/websocket");
             s.onmessage = function (event) {
                 const data = JSON.parse(event.data);
-                if (!data || data.length === 0) return;
+
                 const afterOptDropping = data.afterOptDropping;
                 const droppedLocations = data.droppedLocations;
                 const updateDroppedLocations = data.updateDroppedLocations;
                 const hasEliminatedLines = data.hasEliminatedLines;
+                const gameOver = data.gameOver;
 
                 const droppings = $('.dropping');
                 droppings.removeClass('dropping');
@@ -85,7 +86,7 @@
                         for (let i = 0; i < value.length; i++) {
                             $("[grid='" + (key + ',' + value[i]) + "']").addClass('dropped');
                         }
-                    })
+                    });
                 } else {
                     if (updateDroppedLocations) {
                         for (let i = 0; i < 4; i++) {
@@ -93,6 +94,10 @@
                                 "']").addClass('dropped');
                         }
                     }
+                }
+                if (gameOver) {
+                    clearInterval(gameInterval);
+                    alert('游戏结束!');
                 }
 
             };
@@ -125,6 +130,8 @@
         }
 
         $('#start-game').click(function () {
+            socket.send('start');
+            $('.dropped').removeClass('dropped');
             gameStart();
         });
 

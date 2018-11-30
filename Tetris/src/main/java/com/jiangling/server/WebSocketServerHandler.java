@@ -86,18 +86,16 @@ public class WebSocketServerHandler extends SimpleChannelInboundHandler<Object> 
         // 返回应答消息
         String request = ((TextWebSocketFrame) frame).text();
         RealTimeInfo realTimeInfo = UserPattern.getMap.get(ctx);
-        // 当出现下面两个if条件的任意一个时，表示有新方块生成，则清空request指令，否则方块可能会跳过第一行
-        if (realTimeInfo == null) {
+        // 当出现下面两个条件的任意一个时，表示有新方块生成，则清空request指令，否则方块可能会跳过第一行
+        if (realTimeInfo == null || request.equals("start")) {
             request = "";
             realTimeInfo = new RealTimeInfo();
         }
-        if (realTimeInfo.getOptLog().isDropped() || realTimeInfo.getOptLog().isOptSuccess() || !request.equals("")) {
-            realTimeInfo.moveOrRotate(request);
-            UserPattern.getMap.put(ctx, realTimeInfo);
-            ctx.write(new TextWebSocketFrame(JSON.toJSONString(realTimeInfo.getOptLog())));
-        } else {
-            ctx.write(new TextWebSocketFrame("[]"));
-        }
+        realTimeInfo.moveOrRotate(request);
+        UserPattern.getMap.put(ctx, realTimeInfo);
+        String response = JSON.toJSONString(realTimeInfo.getOptLog());
+//        System.out.println(response);
+        ctx.write(new TextWebSocketFrame(response));
     }
 
     private static void sendHttpResponse(ChannelHandlerContext ctx, FullHttpRequest req, FullHttpResponse res) {

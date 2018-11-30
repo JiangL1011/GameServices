@@ -27,6 +27,7 @@ public class OperationLog {
     private boolean dropped = false;
     // 是否有方块消除
     private boolean hasEliminatedLines;
+    private boolean gameOver;
 
     public boolean isOptSuccess() {
         return optSuccess;
@@ -82,5 +83,13 @@ public class OperationLog {
 
     public void setUpdateDroppedLocations(Set<Integer[]> updateDroppedLocations) {
         this.updateDroppedLocations = updateDroppedLocations;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 }

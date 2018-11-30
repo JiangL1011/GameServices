@@ -117,7 +117,7 @@ public class RealTimeInfo {
         for (int i = 0; i < nextDirectionPattern.length - 1; i++) {
             int y = nextDirectionPattern[i][0] + yOffset;
             int x = nextDirectionPattern[i][1] + xOffset;
-            if (y >= HEIGHT || x >= WIDTH || x < 0 || existDropped(x, y)) {
+            if (y >= HEIGHT || y < 0 || x >= WIDTH || x < 0 || existDropped(x, y)) {
                 opt = false;
                 break;
             } else {
@@ -143,6 +143,7 @@ public class RealTimeInfo {
 
     private void randomNew() {
         if (optLog == null) optLog = new OperationLog();
+        optLog.setGameOver(false);
 
         patternId = CommonUtil.getRandomInt(0, 6);
         int[][][] randomPatternWithAllDirections = PatternConstant.ALL.get(patternId);
@@ -154,6 +155,9 @@ public class RealTimeInfo {
         int[][] temp = new int[randomDirectionPattern.length - 1][2];
         for (int i = 0; i < randomDirectionPattern.length - 1; i++) {
             int[] location = randomDirectionPattern[i];
+
+            if (existDropped(location[1], location[0])) optLog.setGameOver(true);
+
             System.arraycopy(location, 0, temp[i], 0, 2);
         }
 
@@ -167,6 +171,8 @@ public class RealTimeInfo {
         optLog.setOptSuccess(true);
 
         optLog.setDropped(false);
+
+
     }
 
     private boolean eliminate() {
@@ -182,6 +188,7 @@ public class RealTimeInfo {
                     droppedLocations.remove(i + "");
                 }
             } else {
+                droppedLocations.remove(i + "");
                 eliminateLines++;
             }
         }
